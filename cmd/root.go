@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"rag-cli/pkg/version"
 )
 
 var cfgFile string
@@ -17,6 +18,13 @@ var rootCmd = &cobra.Command{
 	Long: `RAG CLI is a command-line tool that provides AI-powered assistance
 using Retrieval-Augmented Generation (RAG) with local language models.
 It can process documents, generate embeddings, and interact with vector databases.`,
+	Run: func(cmd *cobra.Command, args []string) {
+		if versionFlag, _ := cmd.Flags().GetBool("version"); versionFlag {
+			fmt.Println(version.GetBuildInfo().String())
+			return
+		}
+		cmd.Help()
+	},
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -30,6 +38,7 @@ func init() {
 	// Global flags
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.rag-cli.yaml)")
 	rootCmd.PersistentFlags().Bool("debug", false, "Enable debug mode")
+	rootCmd.Flags().BoolP("version", "v", false, "Print version information")
 	
 	// Bind flags to viper
 	viper.BindPFlag("debug", rootCmd.PersistentFlags().Lookup("debug"))

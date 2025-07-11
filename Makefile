@@ -1,12 +1,23 @@
 .PHONY: build run clean test docker-up docker-down install
 
+# Build variables
+APP_NAME := rag-cli
+VERSION := $(shell git describe --tags --always --dirty 2>/dev/null || echo "v0.1.0")
+GIT_COMMIT := $(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
+BUILD_DATE := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+# Build flags
+LDFLAGS := -ldflags "-X 'rag-cli/pkg/version.Version=$(VERSION)' \
+                    -X 'rag-cli/pkg/version.GitCommit=$(GIT_COMMIT)' \
+                    -X 'rag-cli/pkg/version.BuildDate=$(BUILD_DATE)'"
+
 # Build the CLI tool
 build:
-	go build -o rag-cli
+	go build $(LDFLAGS) -o $(APP_NAME)
 
 # Build with race detector and debug info
 build-dev:
-	go build -race -o rag-cli
+	go build -race $(LDFLAGS) -o $(APP_NAME)
 
 # Run the CLI tool
 run:
@@ -25,13 +36,13 @@ test-coverage:
 	go test -v -coverprofile=coverage.out ./...
 	go tool cover -html=coverage.out -o coverage.html
 
-# Start Docker services
+# Start Docker services (ChromaDB only for native Ollama setup)
 docker-up:
-	docker-compose -f docker/docker-compose.yml up -d
+	cd docker && docker-compose -f docker-compose-chroma-only.yaml up -d
 
 # Stop Docker services
 docker-down:
-	docker-compose -f docker/docker-compose.yml down
+	cd docker && docker-compose -f docker-compose-chroma-only.yaml down
 
 # Install dependencies
 deps:
@@ -39,8 +50,8 @@ deps:
 	go mod download
 
 # Install the CLI tool globally
-install: build
-	sudo mv rag-cli /usr/local/bin/
+install:
+	go install $(LDFLAGS) .
 
 # Format code
 fmt:
