@@ -113,7 +113,8 @@ func (c *Client) buildPrompt(query string, context []string) string {
 	// Main instructions
 	prompt.WriteString("You are a command-line assistant. When a user asks you to perform a task, respond with ONLY the shell command(s) needed to complete that task. ")
 	prompt.WriteString("Do not include any markdown formatting, explanations, shell prompts ($, #, >), or other text. ")
-	prompt.WriteString("Output only the raw shell command(s), one per line if multiple commands are needed.\n\n")
+	prompt.WriteString("Output only the raw shell command(s), one per line if multiple commands are needed.\n")
+	prompt.WriteString("Be direct and literal - if the user says 'run git --version', output exactly 'git --version'.\n\n")
 	
 	// System-specific guidance
 	prompt.WriteString("IMPORTANT GUIDELINES:\n")

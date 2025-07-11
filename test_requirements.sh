@@ -6,7 +6,7 @@ test2_result="FAIL"
 test3_result="FAIL"
 test4_result="FAIL"
 test5_result="FAIL"
-test6_result="PASS"  # We know file processing works from previous tests
+test6_result="PASS" # We know file processing works from previous tests
 
 echo "=== RAG CLI Requirements Test ==="
 echo ""
@@ -34,7 +34,7 @@ echo ""
 echo "2. Testing system detection and platform-aware commands..."
 
 echo "   Testing system information detection..."
-./rag-cli chat --allow-commands --auto-approve --prompt 'show me the operating system and architecture' > system_info.txt 2>&1
+./rag-cli chat --allow-commands --auto-approve --prompt 'show me the operating system and architecture' >system_info.txt 2>&1
 
 if grep -q "uname" system_info.txt && (grep -q "darwin\|linux\|windows" system_info.txt || grep -q "arm64\|amd64\|x86_64" system_info.txt); then
   echo "   PASS system detection commands used"
@@ -48,7 +48,7 @@ rm -f system_info.txt
 echo ""
 
 echo "   Testing platform-specific command syntax..."
-./rag-cli chat --allow-commands --auto-approve --prompt 'find the largest file in this directory and show its size in bytes' > platform_test.txt 2>&1
+./rag-cli chat --allow-commands --auto-approve --prompt 'find the largest file in this directory and show its size in bytes' >platform_test.txt 2>&1
 
 # Check if correct platform syntax is used based on detected OS
 if [[ "$(uname)" == "Darwin" ]]; then
@@ -79,10 +79,11 @@ echo ""
 echo "3. Testing available tools detection..."
 
 echo "   Testing tool availability awareness..."
-./rag-cli chat --allow-commands --auto-approve --prompt 'run git --version to check if git is available' > tools_test.txt 2>&1
+./rag-cli chat --allow-commands --auto-approve --prompt 'what version of git is installed?' >tools_test.txt 2>&1
 
 if grep -q "git version" tools_test.txt; then
   echo "   PASS git detection and version check working"
+  test3_result="PASS"
 else
   echo "   FAIL git detection not working"
   echo "   Output: $(head -20 tools_test.txt)"
@@ -94,10 +95,11 @@ echo ""
 echo "4. Testing multi-step execution with learning..."
 
 echo "   Testing iterative command execution..."
-./rag-cli chat --allow-commands --auto-approve --prompt 'first run: mkdir test-workspace, then run: echo "test file" > test-workspace/test.txt' > multistep_test.txt 2>&1
+./rag-cli chat --allow-commands --auto-approve --prompt 'first run: mkdir test-workspace, then run: echo "test file" > test-workspace/test.txt' >multistep_test.txt 2>&1
 
 if [[ -d test-workspace ]] && [[ -f test-workspace/test.txt ]]; then
   echo "   PASS multi-step directory and file creation"
+  test4_result="PASS"
   rm -rf test-workspace
 else
   echo "   FAIL multi-step execution did not complete successfully"
@@ -111,13 +113,15 @@ echo "5. Testing error recovery and learning..."
 
 echo "   Testing command error recovery..."
 # This should trigger an error correction scenario
-./rag-cli chat --allow-commands --auto-approve --prompt 'show me disk usage of all files sorted by size' > error_recovery_test.txt 2>&1
+./rag-cli chat --allow-commands --auto-approve --prompt 'show me disk usage of all files sorted by size' >error_recovery_test.txt 2>&1
 
 # Check if the command completed successfully despite potential initial errors
 if grep -q "Attempt [2-3]" error_recovery_test.txt; then
   echo "   PASS error recovery with retry attempts detected"
+  test5_result="PASS"
 elif grep -q -E "[0-9]+" error_recovery_test.txt && grep -q "$" error_recovery_test.txt; then
   echo "   PASS command executed successfully (may not have needed recovery)"
+  test5_result="PASS"
 else
   echo "   FAIL error recovery test did not show expected results"
   echo "   Output: $(head -10 error_recovery_test.txt)"
@@ -134,12 +138,12 @@ echo "This is a test file about machine learning.
 Machine learning is a subset of artificial intelligence.
 It focuses on algorithms that can learn from data.
 Common techniques include neural networks, decision trees, and support vector machines.
-The goal is to make predictions or decisions without being explicitly programmed." > ml_test.txt
+The goal is to make predictions or decisions without being explicitly programmed." >ml_test.txt
 
 echo "This document discusses software engineering principles.
 Software engineering involves the systematic approach to designing, developing, and maintaining software.
 Key principles include modularity, abstraction, encapsulation, and separation of concerns.
-Testing is crucial for ensuring software quality and reliability." > engineering_test.txt
+Testing is crucial for ensuring software quality and reliability." >engineering_test.txt
 
 echo "   Testing indexing of multiple files..."
 ./rag-cli index ml_test.txt
@@ -151,7 +155,7 @@ mkdir -p test_dir
 echo "Nested document content about databases.
 Databases are structured collections of data.
 They can be relational or non-relational.
-Common database systems include PostgreSQL, MySQL, and MongoDB." > test_dir/database_info.txt
+Common database systems include PostgreSQL, MySQL, and MongoDB." >test_dir/database_info.txt
 
 ./rag-cli index -r test_dir
 echo ""
@@ -162,8 +166,8 @@ curl -s -X GET http://localhost:8000/api/v1/collections | jq '.[0] | {id, name, 
 echo ""
 
 echo "   Testing different file formats..."
-echo '{"name": "test", "description": "JSON test file for RAG CLI"}' > test_config.json
-echo "# Markdown Test\n\nThis is a **markdown** test file.\n\n- Item 1\n- Item 2\n- Item 3" > test_readme.md
+echo '{"name": "test", "description": "JSON test file for RAG CLI"}' >test_config.json
+echo "# Markdown Test\n\nThis is a **markdown** test file.\n\n- Item 1\n- Item 2\n- Item 3" >test_readme.md
 
 ./rag-cli index test_config.json
 ./rag-cli index test_readme.md
@@ -172,18 +176,6 @@ echo ""
 # Update test results based on actual execution
 if [[ "$system_detection_pass" == "true" && "$platform_syntax_pass" == "true" ]]; then
   test2_result="PASS"
-fi
-
-if grep -q "git version" tools_test.txt 2>/dev/null; then
-  test3_result="PASS"
-fi
-
-if [[ -d test-workspace ]] && [[ -f test-workspace/test.txt ]]; then
-  test4_result="PASS"
-fi
-
-if grep -q "Attempt [2-3]" error_recovery_test.txt 2>/dev/null || (grep -q -E "[0-9]+" error_recovery_test.txt 2>/dev/null && grep -q "$" error_recovery_test.txt 2>/dev/null); then
-  test5_result="PASS"
 fi
 
 echo "=== Test Summary ==="
@@ -197,14 +189,14 @@ for i in {1..6}; do
   else
     icon="❌"
   fi
-  
+
   case $i in
-    1) echo "$icon Test 1: Basic command execution - $result" ;;
-    2) echo "$icon Test 2: System detection and platform awareness - $result" ;;
-    3) echo "$icon Test 3: Available tools detection - $result" ;;
-    4) echo "$icon Test 4: Multi-step execution with learning - $result" ;;
-    5) echo "$icon Test 5: Error recovery and learning - $result" ;;
-    6) echo "$icon Test 6: File processing, chunking, embeddings, and ChromaDB - $result" ;;
+  1) echo "$icon Test 1: Basic command execution - $result" ;;
+  2) echo "$icon Test 2: System detection and platform awareness - $result" ;;
+  3) echo "$icon Test 3: Available tools detection - $result" ;;
+  4) echo "$icon Test 4: Multi-step execution with learning - $result" ;;
+  5) echo "$icon Test 5: Error recovery and learning - $result" ;;
+  6) echo "$icon Test 6: File processing, chunking, embeddings, and ChromaDB - $result" ;;
   esac
 done
 
