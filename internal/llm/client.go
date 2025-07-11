@@ -91,7 +91,15 @@ func (c *Client) buildPrompt(query string, context []string) string {
 		prompt.WriteString("\n")
 	}
 	
-	prompt.WriteString("Based on the context above, please answer the following question:\n")
+	prompt.WriteString("You are a command-line assistant. When a user asks you to perform a task, respond with ONLY the shell command(s) needed to complete that task. ")
+	prompt.WriteString("Do not include any markdown formatting, explanations, or other text. ")
+	prompt.WriteString("Output only the raw shell command(s), one per line if multiple commands are needed.\n\n")
+	prompt.WriteString("Examples:\n")
+	prompt.WriteString("User: create a file called hello.txt with content 'hello world'\n")
+	prompt.WriteString("Assistant: echo 'hello world' > hello.txt\n\n")
+	prompt.WriteString("User: list all files in current directory\n")
+	prompt.WriteString("Assistant: ls -la\n\n")
+	prompt.WriteString("User request: ")
 	prompt.WriteString(query)
 	
 	return prompt.String()

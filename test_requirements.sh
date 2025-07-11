@@ -3,18 +3,22 @@
 echo "=== RAG CLI Requirements Test ==="
 echo ""
 
-# Test Requirement 1: Command execution
-echo "1. Testing command execution capability..."
-echo "   Testing basic command execution:"
-./rag-cli exec "echo 'Command execution test successful'"
-echo ""
+# Test New Requirement: Chat command execution
+echo "1. Testing chat command capability..."
 
-echo "   Testing file system operations:"
-./rag-cli exec "ls -la test_document.txt"
-echo ""
+./rag-cli chat --allow-commands --auto-approve --prompt 'create a file called "hello.txt" with the contents "written by rag-cli"'
 
-echo "   Testing system information:"
-./rag-cli exec "uname -a"
+if [[ ! -f hello.txt ]]; then
+  echo "FAIL file not created"
+else
+  contents=$(cat hello.txt)
+  if [[ "$contents" != "written by rag-cli" ]]; then
+    echo "FAIL wanted 'written by rag-cli' but got $contents"
+  else
+    echo "PASS"
+  fi
+  rm hello.txt
+fi
 echo ""
 
 # Test Requirement 2: File processing, chunking, embeddings, and ChromaDB
