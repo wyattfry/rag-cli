@@ -20,9 +20,14 @@ A command-line tool with RAG (Retrieval-Augmented Generation) capabilities using
 
 You can run RAG CLI in two ways:
 
-### Option 1: Fully Dockerized (Recommended)
+### Option 1: Native Ollama + Docker ChromaDB (Recommended for macOS)
 
-This approach runs both Ollama and ChromaDB in Docker containers for a fully self-contained setup.
+This approach uses native Ollama installation with ChromaDB in Docker. **This is the recommended approach for macOS users** as Docker Desktop on macOS does not support GPU passthrough, meaning containerized Ollama cannot access your Apple Silicon GPU for acceleration.
+
+#### Why Native Ollama on macOS?
+- **GPU Acceleration**: Native Ollama can utilize Apple Silicon's Metal Performance Shaders (MPS) for significantly faster inference
+- **Better Performance**: Direct access to system resources without Docker overhead
+- **Simpler Setup**: No need for complex Docker GPU configurations that don't work on macOS anyway
 
 #### Quick Start
 ```bash
@@ -31,43 +36,25 @@ git clone <repository-url>
 cd rag-cli
 go build -o rag-cli
 
-# Start all services
+# Install Ollama natively
+brew install ollama
+
+# Start ChromaDB in Docker
 cd docker
-docker-compose up -d
+docker-compose -f docker-compose-chroma-only.yaml up -d
+
+# Start Ollama in the background
+ollama serve &
 
 # Pull required models
-cd ..
-./scripts/pull-models.sh
+ollama pull granite-code:3b
+ollama pull all-minilm
 
 # You're ready to go!
 ./rag-cli --help
 ```
 
 #### Manual Setup
-1. **Start Services**
-   ```bash
-   cd docker
-   docker-compose up -d
-   ```
-
-2. **Pull Models**
-   ```bash
-   # Pull language model
-   docker exec ollama-server ollama pull granite-code:3b
-   
-   # Pull embedding model
-   docker exec ollama-server ollama pull all-minilm
-   ```
-
-3. **Build CLI**
-   ```bash
-   go build -o rag-cli
-   ```
-
-### Option 2: Native Ollama + Docker ChromaDB
-
-This approach uses native Ollama installation with ChromaDB in Docker.
-
 1. **Install Ollama Locally**
    ```bash
    # On macOS
@@ -76,7 +63,18 @@ This approach uses native Ollama installation with ChromaDB in Docker.
    # Or download from https://ollama.ai
    ```
 
-2. **Pull Required Models**
+2. **Start ChromaDB in Docker**
+   ```bash
+   cd docker
+   docker-compose -f docker-compose-chroma-only.yaml up -d
+   ```
+
+3. **Start Ollama Server**
+   ```bash
+   ollama serve
+   ```
+
+4. **Pull Required Models**
    ```bash
    # Pull language model
    ollama pull granite-code:3b
@@ -85,21 +83,28 @@ This approach uses native Ollama installation with ChromaDB in Docker.
    ollama pull all-minilm
    ```
 
-3. **Start Ollama Server**
-   ```bash
-   ollama serve
-   ```
-
-4. **Start ChromaDB Only**
-   ```bash
-   # Create a minimal docker-compose.yml with just ChromaDB
-   docker run -d -p 8000:8000 --name chroma-db chromadb/chroma:0.5.18
-   ```
-
 5. **Build CLI**
    ```bash
    go build -o rag-cli
    ```
+
+### Option 2: Fully Dockerized (Linux/Windows)
+
+This approach runs both Ollama and ChromaDB in Docker containers. **Note: This is not recommended for macOS due to lack of GPU passthrough support.**
+
+#### For Linux with NVIDIA GPU:
+```bash
+# Use the NVIDIA-specific compose file
+cd docker
+docker-compose -f docker-compose-linux-nvidia.yml up -d
+```
+
+#### For other platforms (CPU-only):
+```bash
+# Use the basic compose file
+cd docker
+# Note: No basic docker-compose.yml exists yet - you'd need to create one
+```
 
 ### Using the Makefile
 

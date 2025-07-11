@@ -1,0 +1,17 @@
+services:
+  chroma:
+    image: chromadb/chroma:0.5.18
+    container_name: chroma-db
+    ports:
+      - "8000:8000"
+    volumes:
+      - chroma-data:/chroma/chroma
+    environment:
+      - ANONYMIZED_TELEMETRY=false
+      - CHROMA_SERVER_HOST=0.0.0.0
+      - CHROMA_SERVER_HTTP_PORT=8000
+    restart: unless-stopped
+
+volumes:
+  chroma-data:
+    driver: local

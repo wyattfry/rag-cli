@@ -1,0 +1,19 @@
+This is a test document for the RAG CLI system.
+
+The RAG CLI is a command-line tool that provides AI-powered assistance using Retrieval-Augmented Generation (RAG) with local language models.
+
+Key features include:
+- Document indexing with chunking and embedding generation
+- Vector database integration with Chroma
+- Command execution capabilities
+- Interactive chat functionality
+- Support for multiple file formats
+
+The system works by:
+1. Reading documents from the file system
+2. Chunking them into smaller pieces
+3. Generating embeddings for each chunk
+4. Storing the embeddings in a vector database
+5. Using the embeddings for context-aware responses
+
+This allows the AI to have access to up-to-date information from your documents and codebase.
