@@ -1,0 +1,20 @@
+llm:
+  model: "granite-code:3b"
+  host: "localhost"
+  port: 11434
+  base_url: "http://localhost:11434"
+
+vector:
+  host: "localhost"
+  port: 8000
+  collection: "documents"
+
+embeddings:
+  model: "all-minilm"
+  host: "localhost"
+  port: 11434
+  base_url: "http://localhost:11434"
+
+chunker:
+  chunk_size: 1000
+  chunk_overlap: 200
