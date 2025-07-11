@@ -7,15 +7,19 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
+	"rag-cli/internal/system"
 	"rag-cli/pkg/config"
 )
 
 type Client struct {
-	baseURL string
-	client  *http.Client
-	model   string
+	baseURL    string
+	client     *http.Client
+	model      string
+	systemInfo *system.SystemInfo
+	sysOnce    sync.Once
 }
 
 type GenerateRequest struct {
@@ -37,6 +41,14 @@ func NewClient(cfg config.LLMConfig) (*Client, error) {
 			Timeout: 30 * time.Second,
 		},
 	}, nil
+}
+
+// getSystemInfo returns cached system information, detecting it once
+func (c *Client) getSystemInfo() *system.SystemInfo {
+	c.sysOnce.Do(func() {
+		c.systemInfo = system.DetectSystemInfo()
+	})
+	return c.systemInfo
 }
 
 func (c *Client) GenerateResponse(query string, context []string) (string, error) {
@@ -83,6 +95,9 @@ func (c *Client) GenerateResponse(query string, context []string) (string, error
 func (c *Client) buildPrompt(query string, context []string) string {
 	var prompt strings.Builder
 	
+	// Get system information
+	sysInfo := c.getSystemInfo()
+	
 	if len(context) > 0 {
 		prompt.WriteString("Context information:\n")
 		for i, ctx := range context {
@@ -91,14 +106,49 @@ func (c *Client) buildPrompt(query string, context []string) string {
 		prompt.WriteString("\n")
 	}
 	
+	// Add system environment information
+	prompt.WriteString(sysInfo.GetCommandSyntaxHints())
+	prompt.WriteString("\n")
+	
+	// Main instructions
 	prompt.WriteString("You are a command-line assistant. When a user asks you to perform a task, respond with ONLY the shell command(s) needed to complete that task. ")
-	prompt.WriteString("Do not include any markdown formatting, explanations, or other text. ")
+	prompt.WriteString("Do not include any markdown formatting, explanations, shell prompts ($, #, >), or other text. ")
 	prompt.WriteString("Output only the raw shell command(s), one per line if multiple commands are needed.\n\n")
-	prompt.WriteString("Examples:\n")
+	
+	// System-specific guidance
+	prompt.WriteString("IMPORTANT GUIDELINES:\n")
+	prompt.WriteString("1. Use the command syntax appropriate for the detected system environment above\n")
+	prompt.WriteString("2. Before performing system-specific operations, consider detecting system properties if needed\n")
+	prompt.WriteString("3. Use only the tools listed as available in the environment\n")
+	prompt.WriteString("4. If you need to detect system properties first, use appropriate detection commands\n\n")
+	
+	// Add system detection commands as reference
+	detectionCommands := sysInfo.GetSystemDetectionCommands()
+	if len(detectionCommands) > 0 {
+		prompt.WriteString("System detection commands you can use if needed:\n")
+		for _, cmd := range detectionCommands {
+			prompt.WriteString(fmt.Sprintf("- %s\n", cmd))
+		}
+		prompt.WriteString("\n")
+	}
+	
+	// Examples based on detected system
+	prompt.WriteString("Examples for your system (output ONLY the command, no $ or other symbols):\n")
 	prompt.WriteString("User: create a file called hello.txt with content 'hello world'\n")
 	prompt.WriteString("Assistant: echo 'hello world' > hello.txt\n\n")
+	
 	prompt.WriteString("User: list all files in current directory\n")
 	prompt.WriteString("Assistant: ls -la\n\n")
+	
+	// Add system-specific example
+	if sysInfo.Capabilities["stat"] == "BSD" {
+		prompt.WriteString("User: show file size in bytes\n")
+		prompt.WriteString("Assistant: stat -f %z filename\n\n")
+	} else if sysInfo.Capabilities["stat"] == "GNU" {
+		prompt.WriteString("User: show file size in bytes\n")
+		prompt.WriteString("Assistant: stat -c %s filename\n\n")
+	}
+	
 	prompt.WriteString("User request: ")
 	prompt.WriteString(query)
 	

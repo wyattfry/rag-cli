@@ -1,6 +1,6 @@
 # RAG CLI
 
-A command-line tool with RAG (Retrieval-Augmented Generation) capabilities using local models.
+A command-line tool with RAG (Retrieval-Augmented Generation) capabilities using local models. The AI assistant can execute shell commands, learn from past interactions, and provide contextual responses based on your indexed documents.
 
 ## Features
 
@@ -8,7 +8,9 @@ A command-line tool with RAG (Retrieval-Augmented Generation) capabilities using
 - **Vector Database**: Integrates with Chroma for storing and retrieving embeddings
 - **Document Indexing**: Automatically chunks and indexes documents
 - **Interactive Chat**: AI-powered chat with contextual responses
-- **Command Execution**: Execute shell commands through the CLI
+- **Intelligent Command Execution**: AI can execute shell commands with iterative feedback and error correction
+- **Learning from Experience**: AI learns from past command executions and improves over time
+- **Platform-Aware**: Automatically handles macOS vs Linux command syntax differences
 - **Multiple File Formats**: Supports various file types (txt, md, go, py, js, ts, json, yaml, etc.)
 
 ## Prerequisites
@@ -151,13 +153,29 @@ chunker:
 
 **Note**: The default configuration works for both Docker and native setups since both use the same ports (11434 for Ollama, 8000 for ChromaDB).
 
+### Recommended Models
+
+For optimal command execution and learning capabilities, consider these models:
+
+#### Language Models
+- **Google Gemma 2 9B SimPO**: Excellent instruction following for command generation
+- **Meta Llama 3.1/3.2**: Great reasoning abilities for complex multi-step tasks
+- **Microsoft Phi 3.5**: Compact but capable, good for resource-constrained environments
+- **Qwen/CodeQwen 2.5 14B**: Specifically designed for coding and command-line tasks
+- **granite-code:3b**: Default model, good balance of speed and capability
+
+#### Embedding Models
+- **all-minilm**: Default, good general-purpose embedding model
+- **nomic-embed-text**: Better for technical documentation and code
+- **sentence-transformers**: Good for semantic similarity tasks
+
 ### Alternative Models
 
 You can use different models by updating the config:
 
 ```yaml
 llm:
-  model: "llama3.1:8b"  # or "mistral:7b", "codellama:7b", etc.
+  model: "gemma2:9b"  # or "llama3.1:8b", "phi3.5", "qwen2.5-coder:14b", etc.
   
 embeddings:
   model: "nomic-embed-text"  # or "all-minilm", "sentence-transformers", etc.
@@ -166,10 +184,10 @@ embeddings:
 Make sure to pull the models first:
 ```bash
 # For Docker setup
-docker exec ollama-server ollama pull llama3.1:8b
+docker exec ollama-server ollama pull gemma2:9b
 
 # For native setup
-ollama pull llama3.1:8b
+ollama pull gemma2:9b
 ```
 
 ## Usage
@@ -186,15 +204,113 @@ ollama pull llama3.1:8b
 ./rag-cli index -f txt,md,go /path/to/project
 ```
 
-### Start Interactive Chat
+### Interactive Chat
 ```bash
+# Start interactive chat
 ./rag-cli chat
+
+# Enable command execution (with user approval)
+./rag-cli chat --allow-commands
+
+# Single prompt with command execution
+./rag-cli chat --allow-commands --prompt "create a backup of my config files"
+
+# Auto-approve commands (use with caution)
+./rag-cli chat --allow-commands --auto-approve --prompt "show me the largest files"
 ```
 
-### Execute Commands
+### Example Interactions
+
+#### Basic File Operations
 ```bash
-./rag-cli exec "ls -la"
-./rag-cli exec "git status"
+./rag-cli chat --allow-commands --prompt "create a file called notes.txt with today's date"
+```
+
+**AI Response:**
+```
+The AI wants to execute the following command(s):
+echo "$(date)" > notes.txt
+Do you want to allow this? (y/n): y
+
+Executing: echo "$(date)" > notes.txt
+$ echo "$(date)" > notes.txt
+
+File created successfully!
+```
+
+#### System Information
+```bash
+./rag-cli chat --allow-commands --prompt "what's the current system load and memory usage?"
+```
+
+**AI Response:**
+```
+The AI wants to execute the following command(s):
+uptime
+free -h
+Do you want to allow this? (y/n): y
+
+Executing: uptime
+$ uptime
+ 15:30:45 up 2 days,  8:15,  3 users,  load average: 0.52, 0.58, 0.59
+
+AI suggests next command(s): [vm_stat | head -10]
+
+Attempt 2/3
+
+Executing: vm_stat | head -10
+$ vm_stat | head -10
+Mach Virtual Memory Statistics: (page size of 16384 bytes)
+Pages free:                               45123.
+Pages active:                            234567.
+...
+```
+
+#### Learning from Mistakes
+```bash
+./rag-cli chat --allow-commands --prompt "find all Python files and count lines of code"
+```
+
+**First attempt (shows error correction):**
+```
+Executing: find . -name "*.py" -exec wc -l {} \;
+$ find . -name "*.py" -exec wc -l {} \;
+Command execution failed: no Python files found
+
+AI suggests next command(s): [find . -name "*.py" | wc -l]
+
+Attempt 2/3
+
+Executing: find . -name "*.py" | wc -l
+$ find . -name "*.py" | wc -l
+0
+
+No Python files found in current directory.
+```
+
+#### Complex Multi-Step Tasks
+```bash
+./rag-cli chat --allow-commands --prompt "create a project structure for a Go web API"
+```
+
+**AI Response:**
+```
+The AI wants to execute the following command(s):
+mkdir -p myapi/{cmd,internal/{handlers,models,db},pkg,docs}
+touch myapi/main.go myapi/go.mod myapi/README.md
+Do you want to allow this? (y/n): y
+
+Executing: mkdir -p myapi/{cmd,internal/{handlers,models,db},pkg,docs}
+$ mkdir -p myapi/{cmd,internal/{handlers,models,db},pkg,docs}
+
+AI suggests next command(s): [touch myapi/main.go myapi/go.mod myapi/README.md]
+
+Attempt 2/3
+
+Executing: touch myapi/main.go myapi/go.mod myapi/README.md
+$ touch myapi/main.go myapi/go.mod myapi/README.md
+
+Project structure created successfully!
 ```
 
 ### Get Help
@@ -207,10 +323,36 @@ ollama pull llama3.1:8b
 ## Architecture
 
 - **CLI Layer**: Cobra-based command-line interface
-- **LLM Integration**: HTTP client for Ollama API
-- **Vector Store**: Chroma database for embeddings
+- **LLM Integration**: HTTP client for Ollama API with intelligent prompting
+- **Vector Store**: Chroma database for embeddings and execution history
 - **Chunking**: Text splitting for optimal embedding generation
 - **Embeddings**: Local embedding generation via Ollama
+- **Command Execution**: Iterative command execution with feedback loops
+- **Learning System**: Historical command execution storage and retrieval
+- **Platform Detection**: Automatic macOS/Linux command syntax handling
+
+## How It Works
+
+### Command Execution Flow
+1. **User Query**: User asks for a task (e.g., "find the largest files")
+2. **Historical Context**: AI retrieves similar past command executions from ChromaDB
+3. **Initial Commands**: AI generates appropriate shell commands using platform-aware syntax
+4. **Iterative Execution**: Commands are executed one at a time
+5. **Feedback Loop**: After each command, AI evaluates results and suggests next steps
+6. **Error Correction**: Failed commands trigger AI to suggest corrected alternatives
+7. **Session Storage**: Complete execution logs are stored in ChromaDB for future learning
+
+### Learning and Improvement
+- **Syntax Learning**: AI learns platform-specific command syntax (macOS vs Linux)
+- **Pattern Recognition**: Similar queries benefit from past successful approaches
+- **Error Avoidance**: Common mistakes are learned and avoided in future executions
+- **Continuous Improvement**: The system gets better over time with more usage
+
+### Safety Features
+- **User Approval**: Commands require explicit user approval (unless `--auto-approve` is used)
+- **Attempt Limits**: Maximum 3 attempts per command sequence to prevent infinite loops
+- **Command Preview**: Shows all commands before execution
+- **Execution Logging**: Full command history with inputs, outputs, and errors
 
 ## Development
 
@@ -296,7 +438,92 @@ curl -X GET http://localhost:11434/api/tags
 
 # Test ChromaDB
 curl -X GET http://localhost:8000/api/v1/heartbeat
+
+# Test command execution
+./rag-cli chat --allow-commands --auto-approve --prompt "echo 'test'"
 ```
+
+### Command Execution Issues
+
+#### Commands Not Executing
+1. **Missing --allow-commands flag**: Command execution is disabled by default
+   ```bash
+   ./rag-cli chat --allow-commands  # Enable command execution
+   ```
+
+2. **Platform syntax errors**: AI might use wrong command syntax
+   - The AI learns from these errors and improves over time
+   - Historical execution data helps avoid repeated mistakes
+
+3. **Permission issues**: Commands might fail due to insufficient permissions
+   ```bash
+   # Check if the command works manually
+   ls -la  # Test basic command
+   ```
+
+#### AI Not Learning from Mistakes
+1. **ChromaDB storage issues**: Check if execution sessions are being stored
+   ```bash
+   # Check ChromaDB collection count
+   curl -s -X GET http://localhost:8000/api/v1/collections | jq '.[0].name, .[0].id'
+   ```
+
+2. **Embedding generation failures**: Check Ollama embedding model
+   ```bash
+   # Test embedding generation
+   curl -X POST http://localhost:11434/api/embeddings -d '{"model": "all-minilm", "prompt": "test"}'
+   ```
+
+## Advanced Features
+
+### Learning and Adaptation
+
+RAG CLI implements a sophisticated learning system that improves over time:
+
+#### What Gets Learned
+- **Platform-specific command syntax** (macOS vs Linux differences)
+- **Successful command patterns** for common tasks
+- **Error recovery strategies** that worked in the past
+- **Multi-step workflow patterns** for complex operations
+
+#### How Learning Works
+1. **Execution Storage**: Every command execution session is stored in ChromaDB
+2. **Semantic Retrieval**: Similar queries retrieve relevant past executions
+3. **Context Integration**: Historical context improves AI decision-making
+4. **Pattern Recognition**: AI identifies successful patterns and avoids failed ones
+
+#### Observing Learning
+You can observe the AI learning by:
+- Running similar commands multiple times
+- Watching error correction improve over time
+- Noting how initial command suggestions get better
+- Seeing platform-specific syntax used correctly
+
+### Command Execution Modes
+
+#### Interactive Mode (Default)
+```bash
+./rag-cli chat --allow-commands
+```
+- User approval required for each command
+- Shows all commands before execution
+- Safest option for untrusted or complex operations
+
+#### Auto-Approve Mode
+```bash
+./rag-cli chat --allow-commands --auto-approve
+```
+- Commands execute automatically without user confirmation
+- Faster workflow for trusted operations
+- **Use with caution** - commands execute immediately
+
+#### Single Prompt Mode
+```bash
+./rag-cli chat --allow-commands --prompt "your task here"
+```
+- Execute one task and exit
+- Perfect for scripting and automation
+- Can be combined with `--auto-approve`
 
 ## Contributing
 
