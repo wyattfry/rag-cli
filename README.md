@@ -13,48 +13,113 @@ A command-line tool with RAG (Retrieval-Augmented Generation) capabilities using
 
 ## Prerequisites
 
-1. **Docker**: Required for running Chroma vector database
-2. **Ollama**: For running local language models
-3. **Go**: For building the CLI tool
+1. **Docker**: Required for running services
+2. **Go**: For building the CLI tool
 
 ## Setup
 
-### 1. Install Ollama
+You can run RAG CLI in two ways:
+
+### Option 1: Fully Dockerized (Recommended)
+
+This approach runs both Ollama and ChromaDB in Docker containers for a fully self-contained setup.
+
+#### Quick Start
 ```bash
-# On macOS
-brew install ollama
+# Clone and build
+git clone <repository-url>
+cd rag-cli
+go build -o rag-cli
 
-# Or download from https://ollama.ai
-```
-
-### 2. Pull Required Models
-```bash
-# Pull a language model (e.g., Granite Code)
-ollama pull granite-code:3b
-
-# Pull an embedding model
-ollama pull all-minilm
-```
-
-### 3. Start Ollama Server
-```bash
-ollama serve
-```
-
-### 4. Start Chroma Database
-```bash
+# Start all services
 cd docker
 docker-compose up -d
+
+# Pull required models
+cd ..
+./scripts/pull-models.sh
+
+# You're ready to go!
+./rag-cli --help
 ```
 
-### 5. Build the CLI Tool
+#### Manual Setup
+1. **Start Services**
+   ```bash
+   cd docker
+   docker-compose up -d
+   ```
+
+2. **Pull Models**
+   ```bash
+   # Pull language model
+   docker exec ollama-server ollama pull granite-code:3b
+   
+   # Pull embedding model
+   docker exec ollama-server ollama pull all-minilm
+   ```
+
+3. **Build CLI**
+   ```bash
+   go build -o rag-cli
+   ```
+
+### Option 2: Native Ollama + Docker ChromaDB
+
+This approach uses native Ollama installation with ChromaDB in Docker.
+
+1. **Install Ollama Locally**
+   ```bash
+   # On macOS
+   brew install ollama
+   
+   # Or download from https://ollama.ai
+   ```
+
+2. **Pull Required Models**
+   ```bash
+   # Pull language model
+   ollama pull granite-code:3b
+   
+   # Pull embedding model
+   ollama pull all-minilm
+   ```
+
+3. **Start Ollama Server**
+   ```bash
+   ollama serve
+   ```
+
+4. **Start ChromaDB Only**
+   ```bash
+   # Create a minimal docker-compose.yml with just ChromaDB
+   docker run -d -p 8000:8000 --name chroma-db chromadb/chroma:0.5.18
+   ```
+
+5. **Build CLI**
+   ```bash
+   go build -o rag-cli
+   ```
+
+### Using the Makefile
+
+For easier setup, you can use the provided Makefile:
+
 ```bash
-go build -o rag-cli
+# Full setup (Docker approach)
+make setup
+
+# Individual commands
+make docker-up    # Start Docker services
+make models       # Pull models
+make build        # Build CLI
+make clean        # Clean build artifacts
+make docker-down  # Stop Docker services
 ```
 
 ## Configuration
 
-Create a config file at `~/.rag-cli.yaml`:
+The CLI uses default settings that work with both Docker and native deployments. You can optionally create a config file at `~/.rag-cli.yaml` to customize settings:
 
 ```yaml
 llm:
@@ -77,6 +142,29 @@ embeddings:
 chunker:
   chunk_size: 1000
   chunk_overlap: 200
+```
+
+**Note**: The default configuration works for both Docker and native setups since both use the same ports (11434 for Ollama, 8000 for ChromaDB).
+
+### Alternative Models
+
+You can use different models by updating the config:
+
+```yaml
+llm:
+  model: "llama3.1:8b"  # or "mistral:7b", "codellama:7b", etc.
+  
+embeddings:
+  model: "nomic-embed-text"  # or "all-minilm", "sentence-transformers", etc.
+```
+
+Make sure to pull the models first:
+```bash
+# For Docker setup
+docker exec ollama-server ollama pull llama3.1:8b
+
+# For native setup
+ollama pull llama3.1:8b
 ```
 
 ## Usage
@@ -151,14 +239,58 @@ rag-cli/
 
 ### Common Issues
 
-1. **Ollama not responding**: Make sure Ollama is running (`ollama serve`)
-2. **Chroma connection failed**: Check if Docker container is running
-3. **Models not found**: Pull required models using `ollama pull`
-4. **Permission errors**: Check file permissions for indexing
+#### Docker Setup Issues
+1. **Services not starting**: Check Docker is running and ports are available
+   ```bash
+   docker ps  # Check running containers
+   docker-compose logs  # Check service logs
+   ```
+
+2. **Models not found in Docker**: Pull models into the container
+   ```bash
+   docker exec ollama-server ollama list  # Check available models
+   ./scripts/pull-models.sh  # Pull required models
+   ```
+
+3. **ChromaDB connection failed**: Ensure container is running
+   ```bash
+   curl -X GET http://localhost:8000/api/v1/heartbeat
+   ```
+
+#### Native Setup Issues
+1. **Ollama not responding**: Make sure Ollama is running
+   ```bash
+   ollama serve  # Start Ollama server
+   curl -X GET http://localhost:11434/api/tags  # Test connection
+   ```
+
+2. **Models not found**: Pull required models
+   ```bash
+   ollama pull granite-code:3b
+   ollama pull all-minilm
+   ```
+
+#### General Issues
+1. **Permission errors**: Check file permissions for indexing
+2. **Port conflicts**: Ensure ports 8000 and 11434 are available
+3. **Memory issues**: Large models require significant RAM
 
 ### Debug Mode
 ```bash
 ./rag-cli --debug chat
+```
+
+### Checking Service Status
+```bash
+# Check all services
+make docker-up
+docker ps
+
+# Test Ollama
+curl -X GET http://localhost:11434/api/tags
+
+# Test ChromaDB
+curl -X GET http://localhost:8000/api/v1/heartbeat
 ```
 
 ## Contributing
