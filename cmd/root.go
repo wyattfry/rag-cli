@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/cobra/doc"
 	"github.com/spf13/viper"
 	"rag-cli/internal/chat"
 	"rag-cli/internal/embeddings"
@@ -37,6 +38,30 @@ By default, starts an interactive chat session. Use subcommands for other operat
 	},
 }
 
+// docsCmd generates documentation for all commands
+var docsCmd = &cobra.Command{
+	Use:    "docs",
+	Short:  "Generate documentation for all commands",
+	Long:   "Generate Markdown documentation for all commands and subcommands.",
+	Hidden: true, // Hidden from help output
+	RunE: func(cmd *cobra.Command, args []string) error {
+		docsDir := "./docs"
+		
+		// Create docs directory if it doesn't exist
+		if err := os.MkdirAll(docsDir, 0755); err != nil {
+			return fmt.Errorf("failed to create docs directory: %w", err)
+		}
+		
+		// Generate markdown documentation
+		if err := doc.GenMarkdownTree(rootCmd, docsDir); err != nil {
+			return fmt.Errorf("failed to generate documentation: %w", err)
+		}
+		
+		fmt.Printf("Documentation generated in %s/\n", docsDir)
+		return nil
+	},
+}
+
 // Execute adds all child commands to the root command and sets flags appropriately.
 func Execute() error {
 	return rootCmd.Execute()
@@ -44,6 +69,9 @@ func Execute() error {
 
 func init() {
 	cobra.OnInitialize(initConfig)
+
+	// Add subcommands
+	rootCmd.AddCommand(docsCmd)
 
 	// Global flags
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.rag-cli.yaml)")
