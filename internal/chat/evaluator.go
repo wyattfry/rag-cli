@@ -74,7 +74,11 @@ func (e *AIEvaluator) checkGoalAchievement(executionLog, originalRequest string)
 	prompt.WriteString(originalRequest)
 	prompt.WriteString("\n\nExecution log:\n")
 	prompt.WriteString(executionLog)
-	prompt.WriteString("\n\nHas the original request been successfully completed? ")
+	prompt.WriteString("\n\nConsider these guidelines:\n")
+	prompt.WriteString("- For information requests (what/how/which/where questions), check if the command output contains the requested information\n")
+	prompt.WriteString("- For file/system modification requests, check if the intended changes were successfully made\n")
+	prompt.WriteString("- If the command ran successfully and produced relevant output for an information request, the goal is achieved\n")
+	prompt.WriteString("\nHas the original request been successfully completed? ")
 	prompt.WriteString("Respond with only 'YES' if the goal has been achieved, or 'NO' if more work is needed.")
 
 	response, err := e.llmClient.GenerateResponse(prompt.String(), nil)
@@ -193,4 +197,27 @@ func (e *AIEvaluator) StoreExecutionSession(executionLog string) error {
 	}
 
 	return nil
+}
+
+// GenerateFinalAnswer creates a human-readable final answer based on the conversation
+func (e *AIEvaluator) GenerateFinalAnswer(executionLog, originalRequest string) (string, error) {
+	var prompt strings.Builder
+	prompt.WriteString("Based on the user's original request and the command execution results, provide a clear, direct answer.\n\n")
+	prompt.WriteString("Original user request: ")
+	prompt.WriteString(originalRequest)
+	prompt.WriteString("\n\nCommand execution log:\n")
+	prompt.WriteString(executionLog)
+	prompt.WriteString("\n\nProvide a complete, conversational answer to the user's original question using full sentences. ")
+	prompt.WriteString("Extract the relevant information from the command output and present it clearly and completely. ")
+	prompt.WriteString("Examples:\n")
+	prompt.WriteString("- Question: 'what shell am I using?' Output: 'SHELL=/bin/zsh' → Answer: 'You are using the zsh shell.'\n")
+	prompt.WriteString("- Question: 'what operating system is this?' Output: 'Darwin...' → Answer: 'This is a macOS system running version X.X on Apple Silicon.'\n")
+	prompt.WriteString("Always provide a complete sentence that directly answers their question. Do not include raw command output.")
+
+	response, err := e.llmClient.GenerateResponse(prompt.String(), nil)
+	if err != nil {
+		return "", err
+	}
+
+	return strings.TrimSpace(response), nil
 }

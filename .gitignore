@@ -60,6 +60,7 @@ docker/.env
 dist/
 build/
 bin/
+__pycache__/
 
 # Temporary files
 temp/

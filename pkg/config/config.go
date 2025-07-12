@@ -14,6 +14,7 @@ type Config struct {
 	Embeddings EmbeddingsConfig `mapstructure:"embeddings"`
 	Chunker    ChunkerConfig    `mapstructure:"chunker"`
 	AutoIndex  AutoIndexConfig  `mapstructure:"auto_index"`
+	Chat       ChatConfig       `mapstructure:"chat"`
 }
 
 type LLMConfig struct {
@@ -52,6 +53,12 @@ type AutoIndexConfig struct {
 	BatchDelay      string   `mapstructure:"batch_delay"`
 }
 
+type ChatConfig struct {
+	MaxAttempts       int  `mapstructure:"max_attempts"`
+	MaxOutputLines    int  `mapstructure:"max_output_lines"`    // Max lines to show in interactive mode
+	TruncateOutput    bool `mapstructure:"truncate_output"`     // Enable/disable output truncation
+}
+
 func Load() (*Config, error) {
 	// Set defaults
 	viper.SetDefault("llm.model", "granite-code:3b")
@@ -72,6 +79,11 @@ func Load() (*Config, error) {
 	
 	viper.SetDefault("chunker.chunk_size", 1000)
 	viper.SetDefault("chunker.chunk_overlap", 200)
+	
+	// Chat settings
+	viper.SetDefault("chat.max_attempts", 3)
+	viper.SetDefault("chat.max_output_lines", 50)  // Show first and last 25 lines
+	viper.SetDefault("chat.truncate_output", true)  // Enable truncation by default
 	
 	// Auto-index defaults
 	viper.SetDefault("auto_index.enabled", false)

@@ -71,9 +71,12 @@ func runChat(cmd *cobra.Command) error {
 
 	// Create session config
 	sessionConfig := &chat.SessionConfig{
-		AutoApprove: autoApprove,
-		AutoIndex:   autoIndex,
-		NoHistory:   noHistory,
+		AutoApprove:     autoApprove,
+		AutoIndex:       autoIndex,
+		NoHistory:       noHistory,
+		MaxAttempts:     cfg.Chat.MaxAttempts,
+		MaxOutputLines:  cfg.Chat.MaxOutputLines,
+		TruncateOutput:  cfg.Chat.TruncateOutput,
 	}
 
 	// Initialize auto-indexer if enabled

@@ -1,0 +1,52 @@
+# Example RAG CLI Configuration File
+# Copy this to ~/.rag-cli.yaml and modify as needed
+
+# LLM Configuration
+llm:
+  model: "granite-code:3b"
+  host: "localhost"
+  port: 11434
+  base_url: "http://localhost:11434"
+
+# Vector Database Configuration
+vector:
+  host: "localhost"
+  port: 8000
+  collection: "documents"
+  command_collection: "command_history"
+  auto_index_collection: "auto_indexed"
+
+# Embeddings Configuration
+embeddings:
+  model: "all-minilm"
+  host: "localhost"
+  port: 11434
+  base_url: "http://localhost:11434"
+
+# Text Chunking Configuration
+chunker:
+  chunk_size: 1000
+  chunk_overlap: 200
+
+# Chat Behavior Configuration
+chat:
+  # Maximum number of retry attempts when commands fail
+  # Default: 3, increase for more persistent command execution
+  max_attempts: 5
+  
+  # Output display configuration for interactive mode
+  # Maximum lines to show (split between head and tail)
+  # Default: 50 (shows first 25 and last 25 lines)
+  max_output_lines: 50
+  
+  # Enable output truncation to prevent overwhelming the terminal
+  # Default: true
+  truncate_output: true
+
+# Auto-indexing Configuration
+auto_index:
+  enabled: false
+  extensions: [".txt", ".md", ".py", ".js", ".go", ".json", ".yaml", ".yml"]
+  max_file_size: 1048576  # 1MB in bytes
+  exclude_patterns: [".git/*", "node_modules/*", "*.log", "tmp/*", "temp/*", "*.tmp"]
+  batch_delay: "2s"
