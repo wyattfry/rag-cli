@@ -2,6 +2,10 @@
 
 # Test 2: System Detection and Platform-Aware Commands
 
+# Get the directory where this script is located and source helpers
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/helpers.sh"
+
 echo "Testing system detection and platform-aware commands..."
 
 # Test system information detection

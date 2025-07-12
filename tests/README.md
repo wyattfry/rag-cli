@@ -41,11 +41,54 @@ To add a new test:
 ## Test Structure
 
 Each test file should:
+- Source the shared helpers: `source "$SCRIPT_DIR/helpers.sh"`
 - Use `create_temp_file()` for temporary output files
 - Exit with code 0 for success, non-zero for failure
 - Clean up any files it creates (except temp files which are auto-cleaned)
 - Use descriptive echo statements for progress
 
+## Helper Functions
+
+All tests use shared helper functions from `helpers.sh`:
+
+### File Management
+- `create_temp_file()` - Creates temporary files in test directory
+- `cleanup_test_files()` - Clean up test files by pattern
+- `wait_for_file()` - Wait for file creation with timeout
+
+### Command Execution
+- `rag_cli()` - Wrapper for running CLI commands (adds --no-history for chat commands)
+- `command_exists()` - Check if a command is available
+
+### Output Formatting
+- `print_status()` - Print colored status messages (PASS/FAIL/INFO)
+- `run_test_section()` - Start a new test section
+
+### Utilities
+- `contains()` - Check if string contains substring
+- `extract_number()` - Extract first number from text
+- `count_lines()` - Count lines in text
+- `get_platform()` - Get current platform (macos/linux/windows)
+- `should_skip_test()` - Check if test should be skipped
+
+### ChromaDB
+- `check_chromadb()` - Verify ChromaDB is running
+- `get_test_collections()` - Generate unique collection names
+
 ## Temporary Files
 
 The test runner creates a temporary directory (`$TEST_TEMP_DIR`) and provides a helper function `create_temp_file()` that creates temporary files in this directory. All temporary files are automatically cleaned up when the test runner exits.
+
+## Running Individual Tests
+
+Thanks to the shared helper system, each test can be run independently:
+```bash
+./tests/test_01_basic_command.sh
+./tests/test_09_collections.sh
+# etc.
+```
+
+Each test will:
+1. Source the helpers automatically
+2. Set up its own temporary directory
+3. Clean up when finished

@@ -2,6 +2,11 @@
 
 # Test 8: Auto-Indexing of File Changes
 
+
+# Get the directory where this script is located and source helpers
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/helpers.sh"
+
 echo "Testing auto-indexing of file changes..."
 
 # Test file creation auto-indexing

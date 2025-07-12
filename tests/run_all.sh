@@ -5,37 +5,12 @@
 
 set -e
 
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
-
 # Get the directory where this script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 
-# Create temporary directory for all test files
-TEST_TEMP_DIR=$(mktemp -d)
-export TEST_TEMP_DIR
-echo "Using temporary directory: $TEST_TEMP_DIR"
-
-# Function to create temp files in our test directory
-create_temp_file() {
-    mktemp "$TEST_TEMP_DIR/test_${RANDOM}_XXXXXX.txt"
-}
-export -f create_temp_file
-
-# Function to run rag-cli using go run
-rag_cli() {
-    # For chat commands, add --no-history to avoid context pollution between tests
-    if [[ "$1" == "chat" ]]; then
-        go run . "$@" --no-history
-    else
-        go run . "$@"
-    fi
-}
-export -f rag_cli
+# Source the shared helpers
+source "$SCRIPT_DIR/helpers.sh"
 
 # Cleanup function
 cleanup() {

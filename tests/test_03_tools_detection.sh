@@ -2,6 +2,11 @@
 
 # Test 3: Available Tools Detection
 
+
+# Get the directory where this script is located and source helpers
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/helpers.sh"
+
 echo "Testing available tools detection..."
 
 echo "  Testing tool availability awareness..."

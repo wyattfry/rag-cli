@@ -1,1 +1,0 @@
-# Auto-index test file

@@ -2,6 +2,11 @@
 
 # Test 7: Command Evaluation and Goal Recognition
 
+
+# Get the directory where this script is located and source helpers
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/helpers.sh"
+
 echo "Testing command evaluation and goal recognition..."
 
 # Test simple goal recognition

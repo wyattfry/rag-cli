@@ -2,6 +2,11 @@
 
 # Test 4: Multi-step Command Execution with Learning
 
+
+# Get the directory where this script is located and source helpers
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/helpers.sh"
+
 echo "Testing multi-step execution with learning..."
 
 echo "  Testing iterative command execution..."
