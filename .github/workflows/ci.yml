@@ -13,10 +13,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Set up Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v5
         with:
           go-version: '1.20.x'
 
@@ -28,16 +28,16 @@ jobs:
 
       - name: Build and version info
         env:
-          GIT_COMMIT: $(echo $GITHUB_SHA)
-          BUILD_DATE: $(date +"%Y-%m-%dT%H:%M:%SZ")
+          GIT_COMMIT: ${{ github.sha }}
+          BUILD_DATE: ${{ github.run_id }}
         run: |
           go build -o rag-cli
           echo "Version: $(go list -m)" > version.txt
           echo "Git Commit: ${GIT_COMMIT}" >> version.txt
-          echo "Build Date: ${BUILD_DATE}" >> version.txt
+          echo "Build Date: $(date +"%Y-%m-%dT%H:%M:%SZ")" >> version.txt
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: binaries
           path: |
