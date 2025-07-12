@@ -12,7 +12,7 @@ echo "Testing basic chat command capability..."
 output_file=$(create_temp_file)
 
 # Test basic file creation command
-rag_cli chat --auto-approve --prompt 'create a file called "hello.txt" with the contents "written by rag-cli"' > "$output_file" 2>&1
+rag_cli --auto-approve --prompt 'create a file called "hello.txt" with the contents "written by rag-cli"' > "$output_file" 2>&1
 
 if [[ ! -f hello.txt ]]; then
     echo "FAIL: File not created"

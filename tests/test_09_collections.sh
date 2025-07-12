@@ -75,7 +75,7 @@ echo "    PASS: Collections remain stable during indexing"
 echo "  Testing command execution functionality..."
 
 # Execute a simple command (without --no-history so it gets stored)
-if rag_cli chat --auto-approve --prompt 'run echo "collection test"' > /dev/null 2>&1; then
+if rag_cli --auto-approve --prompt 'run echo "collection test"' > /dev/null 2>&1; then
     echo "    PASS: Command execution completed successfully"
 else
     echo "    FAIL: Command execution failed"
@@ -96,7 +96,7 @@ echo "    PASS: Collections remain stable during command execution"
 echo "  Testing auto-indexing functionality..."
 
 # Use auto-indexing to create a file
-if rag_cli chat --auto-approve --auto-index --prompt 'create a file called auto_test_collections.txt with content "auto-indexed content"' > /dev/null 2>&1; then
+if rag_cli --auto-approve --auto-index --prompt 'create a file called auto_test_collections.txt with content "auto-indexed content"' > /dev/null 2>&1; then
     echo "    PASS: Auto-indexing completed successfully"
 else
     echo "    FAIL: Auto-indexing failed"
@@ -119,7 +119,7 @@ echo "    PASS: Auto-indexing functionality working"
 echo "  Testing --no-history flag..."
 
 # Execute command with --no-history (this should work without storing to command_history)
-if rag_cli chat --auto-approve --no-history --prompt 'run echo "no history test"' > /dev/null 2>&1; then
+if rag_cli --auto-approve --no-history --prompt 'run echo "no history test"' > /dev/null 2>&1; then
     echo "    PASS: --no-history command execution works"
 else
     echo "    FAIL: --no-history command execution failed"

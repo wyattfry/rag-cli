@@ -153,6 +153,25 @@ func (s *Session) generateCommandExplanation(command string) string {
 		return "I need to check your environment variables to find out what shell you're using."
 	}
 	
+	if strings.HasPrefix(command, "date") {
+		if strings.Contains(command, "+") {
+			return "I need to get the current date and time in a specific format."
+		}
+		return "I need to check the current date and time."
+	}
+	
+	if strings.HasPrefix(command, "ipconfig") {
+		return "I need to check your local IP address."
+	}
+	
+	if strings.HasPrefix(command, "ifconfig") {
+		return "I need to check your network interface configuration."
+	}
+	
+	if strings.Contains(command, "curl") && (strings.Contains(command, "ifconfig.me") || strings.Contains(command, "ipinfo.io")) {
+		return "I need to check your external/public IP address."
+	}
+	
 	if strings.HasPrefix(command, "ls") {
 		return "I need to list the files and directories here."
 	}

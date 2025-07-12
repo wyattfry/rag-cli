@@ -52,11 +52,11 @@ test-all:
 
 # Start Docker services (ChromaDB only for native Ollama setup)
 docker-up:
-	cd docker && docker-compose -f docker-compose-chroma-only.yaml up -d
+	cd docker && docker-compose up -d
 
 # Stop Docker services
 docker-down:
-	cd docker && docker-compose -f docker-compose-chroma-only.yaml down
+	cd docker && docker-compose down
 
 # Install dependencies
 deps:

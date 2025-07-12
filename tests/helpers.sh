@@ -36,8 +36,8 @@ rag_cli() {
     # Change to project root for execution
     (
         cd "$PROJECT_ROOT"
-        # For chat commands, add --no-history to avoid context pollution between tests
-        if [[ "$1" == "chat" ]]; then
+        # For root command (chat mode) or explicit chat flags, add --no-history to avoid context pollution between tests
+        if [[ "$1" == "--auto-approve" || "$1" == "--prompt" || "$*" == *"--prompt"* || "$*" == *"--auto-approve"* ]]; then
             go run . "$@" --no-history
         else
             go run . "$@"
