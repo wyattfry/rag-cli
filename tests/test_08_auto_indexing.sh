@@ -12,7 +12,7 @@ echo "Testing auto-indexing of file changes..."
 # Test file creation auto-indexing
 echo "  Testing file creation auto-indexing..."
 auto_index_test_file=$(create_temp_file)
-rag_cli chat --allow-commands --auto-approve --auto-index --prompt 'create a file called auto_test.py with content "# Auto-index test file"' >"$auto_index_test_file" 2>&1
+rag_cli chat --auto-approve --auto-index --prompt 'create a file called auto_test.py with content "# Auto-index test file"' >"$auto_index_test_file" 2>&1
 
 # Check if auto-indexing was triggered
 if ! grep -q "\[Auto-indexing" "$auto_index_test_file" || [[ ! -f auto_test.py ]]; then
@@ -28,7 +28,7 @@ rm -f auto_test.py
 # Test file filtering (should not index log files)
 echo "  Testing file filtering (should not index log files)..."
 filter_test_file=$(create_temp_file)
-rag_cli chat --allow-commands --auto-approve --auto-index --prompt 'create a log file called test.log' >"$filter_test_file" 2>&1
+rag_cli chat --auto-approve --auto-index --prompt 'create a log file called test.log' >"$filter_test_file" 2>&1
 
 # Check that .log files are not auto-indexed
 if grep "\[Auto-indexing" "$filter_test_file" | grep -q "test.log" || [[ ! -f test.log ]]; then
@@ -44,7 +44,7 @@ rm -f test.log
 # Test multiple file creation
 echo "  Testing multiple file creation..."
 multi_test_file=$(create_temp_file)
-rag_cli chat --allow-commands --auto-approve --auto-index --prompt 'create files: test.txt with "hello" and test.py with "print(1)"' >"$multi_test_file" 2>&1
+rag_cli chat --auto-approve --auto-index --prompt 'create files: test.txt with "hello" and test.py with "print(1)"' >"$multi_test_file" 2>&1
 
 # Check if multiple files trigger auto-indexing
 if ! (grep -q "test.txt" "$multi_test_file" || grep -q "test.py" "$multi_test_file") || [[ ! -f test.txt ]] || [[ ! -f test.py ]]; then

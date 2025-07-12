@@ -11,7 +11,7 @@ echo "Testing available tools detection..."
 
 echo "  Testing tool availability awareness..."
 tools_test_file=$(create_temp_file)
-rag_cli chat --allow-commands --auto-approve --prompt 'what version of git is installed?' >"$tools_test_file" 2>&1
+rag_cli chat --auto-approve --prompt 'what version of git is installed?' >"$tools_test_file" 2>&1
 
 if ! grep -q "git version" "$tools_test_file"; then
     echo "FAIL: Git detection not working"

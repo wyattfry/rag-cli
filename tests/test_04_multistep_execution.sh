@@ -11,7 +11,7 @@ echo "Testing multi-step execution with learning..."
 
 echo "  Testing iterative command execution..."
 multistep_test_file=$(create_temp_file)
-rag_cli chat --allow-commands --auto-approve --prompt 'first run: mkdir test-workspace, then run: echo "test file" > test-workspace/test.txt' >"$multistep_test_file" 2>&1
+rag_cli chat --auto-approve --prompt 'first run: mkdir test-workspace, then run: echo "test file" > test-workspace/test.txt' >"$multistep_test_file" 2>&1
 
 if [[ ! -d test-workspace ]] || [[ ! -f test-workspace/test.txt ]]; then
     echo "FAIL: Multi-step execution did not complete successfully"

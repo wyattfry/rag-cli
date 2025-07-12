@@ -31,8 +31,6 @@ func init() {
 
 	// Add non-interactive prompt flag
 	chatCmd.Flags().StringP("prompt", "p", "", "Single prompt for non-interactive mode")
-	// Add command execution flag
-	chatCmd.Flags().BoolP("allow-commands", "c", false, "Allow AI to execute shell commands")
 	// Add auto-approve flag for non-interactive execution
 	chatCmd.Flags().Bool("auto-approve", false, "Automatically approve command execution (use with caution)")
 	// Add auto-index flag for automatic file indexing
@@ -67,17 +65,15 @@ func runChat(cmd *cobra.Command) error {
 
 	// Get flags
 	prompt, _ := cmd.Flags().GetString("prompt")
-	allowCommands, _ := cmd.Flags().GetBool("allow-commands")
 	autoApprove, _ := cmd.Flags().GetBool("auto-approve")
 	autoIndex, _ := cmd.Flags().GetBool("auto-index")
 	noHistory, _ := cmd.Flags().GetBool("no-history")
 
 	// Create session config
 	sessionConfig := &chat.SessionConfig{
-		AllowCommands: allowCommands,
-		AutoApprove:   autoApprove,
-		AutoIndex:     autoIndex,
-		NoHistory:     noHistory,
+		AutoApprove: autoApprove,
+		AutoIndex:   autoIndex,
+		NoHistory:   noHistory,
 	}
 
 	// Initialize auto-indexer if enabled

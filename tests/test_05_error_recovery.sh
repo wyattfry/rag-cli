@@ -12,7 +12,7 @@ echo "Testing error recovery and learning..."
 echo "  Testing command error recovery..."
 # This should trigger an error correction scenario
 error_recovery_test_file=$(create_temp_file)
-rag_cli chat --allow-commands --auto-approve --prompt 'show me disk usage of all files sorted by size' >"$error_recovery_test_file" 2>&1
+rag_cli chat --auto-approve --prompt 'show me disk usage of all files sorted by size' >"$error_recovery_test_file" 2>&1
 
 # Check if the command completed successfully despite potential initial errors
 if grep -q "Attempt [2-3]" "$error_recovery_test_file"; then

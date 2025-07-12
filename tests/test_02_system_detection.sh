@@ -11,7 +11,7 @@ echo "Testing system detection and platform-aware commands..."
 # Test system information detection
 echo "  Testing system information detection..."
 system_info_file=$(create_temp_file)
-rag_cli chat --allow-commands --auto-approve --prompt 'show me the operating system and architecture' >"$system_info_file" 2>&1
+rag_cli chat --auto-approve --prompt 'show me the operating system and architecture' >"$system_info_file" 2>&1
 
 if ! grep -q "uname" "$system_info_file" || ! (grep -q "darwin\|linux\|windows" "$system_info_file" || grep -q "arm64\|amd64\|x86_64" "$system_info_file"); then
     echo "FAIL: System detection not working properly"
@@ -24,7 +24,7 @@ echo "  PASS: System detection commands used"
 # Test platform-specific command syntax
 echo "  Testing platform-specific command syntax..."
 platform_test_file=$(create_temp_file)
-rag_cli chat --allow-commands --auto-approve --prompt 'find the largest file in this directory and show its size in bytes' >"$platform_test_file" 2>&1
+rag_cli chat --auto-approve --prompt 'find the largest file in this directory and show its size in bytes' >"$platform_test_file" 2>&1
 
 # Check if correct platform syntax is used based on detected OS
 if [[ "$(uname)" == "Darwin" ]]; then

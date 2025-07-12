@@ -122,14 +122,12 @@ func (is *InteractiveSession) showWelcome() {
 	is.infoColor.Println("RAG CLI Chat - Type 'exit' to quit")
 	is.separatorColor.Println(is.horizontalRule)
 	
-	if is.session.config.AllowCommands {
-		is.infoColor.Println("[Command execution enabled]")
-		if is.session.config.AutoApprove {
-			is.infoColor.Println("[Auto-approve enabled]")
-		}
-		if is.session.config.AutoIndex {
-			is.infoColor.Println("[Auto-indexing enabled]")
-		}
+	// Show enabled features
+	if is.session.config.AutoApprove {
+		is.infoColor.Println("[Auto-approve enabled]")
+	}
+	if is.session.config.AutoIndex {
+		is.infoColor.Println("[Auto-indexing enabled]")
 	}
 }
 
@@ -150,8 +148,8 @@ func (is *InteractiveSession) showHelp() {
 	fmt.Println("  • Ctrl+C to cancel current input")
 	fmt.Println("  • Ctrl+D to exit chat")
 	fmt.Println("")
-	fmt.Println("The AI can execute shell commands if enabled with --allow-commands flag.")
-	fmt.Println("You'll be prompted to approve each command before execution.")
+	fmt.Println("The AI can execute shell commands and will prompt for approval.")
+	fmt.Println("Use --auto-approve flag to skip confirmation prompts.")
 	is.separatorColor.Println(is.lightRule)
 }
 

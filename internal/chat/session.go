@@ -17,10 +17,9 @@ import (
 
 // SessionConfig holds configuration for a chat session
 type SessionConfig struct {
-	AllowCommands bool
-	AutoApprove   bool
-	AutoIndex     bool
-	NoHistory     bool
+	AutoApprove bool
+	AutoIndex   bool
+	NoHistory   bool
 }
 
 // Session represents an interactive or single-prompt chat session
@@ -98,10 +97,7 @@ func (s *Session) processResponseWithCommands(response string, originalRequest s
 		return response, nil
 	}
 
-	// Check if command execution is allowed
-	if !s.config.AllowCommands {
-		return response + "\n\n[Command execution is disabled. Use --allow-commands flag to enable.]", nil
-	}
+	// Commands are always allowed in chat mode
 
 	// Ask user for permission to execute commands (unless auto-approved)
 	if !s.config.AutoApprove {
