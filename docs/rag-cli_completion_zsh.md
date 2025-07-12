@@ -43,7 +43,7 @@ rag-cli completion zsh [flags]
 
 ```
       --config string   config file (default is $HOME/.rag-cli.yaml)
-      --debug           Enable debug mode
+      --debug           Enable debug mode with detailed logging
 ```
 
 ### SEE ALSO

@@ -12,7 +12,20 @@ import (
 var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print the version information",
-	Long:  `Print the version information including build details.`,
+	Long: `Print the version information including build details such as:
+- Version number
+- Git commit hash
+- Build date and time
+- Go version used for building
+
+Useful for debugging, support requests, and verifying your installation.
+
+EXAMPLES:
+  # Show version in human-readable format
+  rag-cli version
+
+  # Show version in JSON format for scripts
+  rag-cli version --json`,
 	Run: func(cmd *cobra.Command, args []string) {
 		outputJSON, _ := cmd.Flags().GetBool("json")
 		
@@ -35,5 +48,5 @@ func init() {
 	rootCmd.AddCommand(versionCmd)
 	
 	// Add JSON output flag
-	versionCmd.Flags().BoolP("json", "j", false, "Output version information in JSON format")
+	versionCmd.Flags().BoolP("json", "j", false, "Output version information in JSON format for scripting and automation")
 }

@@ -4,7 +4,20 @@ Print the version information
 
 ### Synopsis
 
-Print the version information including build details.
+Print the version information including build details such as:
+- Version number
+- Git commit hash
+- Build date and time
+- Go version used for building
+
+Useful for debugging, support requests, and verifying your installation.
+
+EXAMPLES:
+  # Show version in human-readable format
+  rag-cli version
+
+  # Show version in JSON format for scripts
+  rag-cli version --json
 
 ```
 rag-cli version [flags]
@@ -14,14 +27,14 @@ rag-cli version [flags]
 
 ```
   -h, --help   help for version
-  -j, --json   Output version information in JSON format
+  -j, --json   Output version information in JSON format for scripting and automation
 ```
 
 ### Options inherited from parent commands
 
 ```
       --config string   config file (default is $HOME/.rag-cli.yaml)
-      --debug           Enable debug mode
+      --debug           Enable debug mode with detailed logging
 ```
 
 ### SEE ALSO

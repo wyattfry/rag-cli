@@ -18,7 +18,7 @@ See each sub-command's help for details on how to use the generated script.
 
 ```
       --config string   config file (default is $HOME/.rag-cli.yaml)
-      --debug           Enable debug mode
+      --debug           Enable debug mode with detailed logging
 ```
 
 ### SEE ALSO

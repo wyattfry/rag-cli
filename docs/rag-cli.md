@@ -8,7 +8,33 @@ RAG CLI is a command-line tool that provides AI-powered assistance
 using Retrieval-Augmented Generation (RAG) with local language models.
 It can process documents, generate embeddings, and interact with vector databases.
 
+The AI assistant can execute shell commands, learn from past interactions, and
+provide contextual responses based on your indexed documents. It features
+intelligent command execution with iterative feedback and error correction.
+
 By default, starts an interactive chat session. Use subcommands for other operations.
+
+EXAMPLES:
+  # Start interactive chat (default behavior)
+  rag-cli
+
+  # Single prompt with command execution
+  rag-cli --prompt "create a backup of my config files"
+
+  # Auto-approve commands (use with caution)
+  rag-cli --auto-approve --prompt "show me the largest files"
+
+  # Non-interactive mode without command execution
+  rag-cli --prompt "explain how to set up a Go project" --no-history
+
+PREREQUISITES:
+  - Ollama running locally (brew install ollama)
+  - ChromaDB running in Docker or locally
+  - Models: llama3.1:8b (8B+ recommended), all-minilm
+
+CONFIGURATION:
+  Create ~/.rag-cli.yaml to customize LLM models, hosts, and other settings.
+  See config-example.yaml for reference.
 
 ```
 rag-cli [flags]
@@ -17,14 +43,14 @@ rag-cli [flags]
 ### Options
 
 ```
-      --auto-approve    Automatically approve command execution (use with caution)
-      --auto-index      Automatically index file changes after command execution
+      --auto-approve    Automatically approve command execution without user confirmation. USE WITH CAUTION - commands execute immediately.
+      --auto-index      Automatically index file changes after command execution for learning
       --config string   config file (default is $HOME/.rag-cli.yaml)
-      --debug           Enable debug mode
+      --debug           Enable debug mode with detailed logging
   -h, --help            help for rag-cli
-      --no-history      Disable historical context lookup (useful for testing)
-  -p, --prompt string   Single prompt for non-interactive mode
-  -v, --version         Print version information
+      --no-history      Disable historical context lookup. Useful for testing or when you want fresh responses without past context.
+  -p, --prompt string   Single prompt for non-interactive mode. Execute one task and exit.
+  -v, --version         Print version information and build details
 ```
 
 ### SEE ALSO

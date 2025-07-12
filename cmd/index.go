@@ -22,7 +22,29 @@ var indexCmd = &cobra.Command{
 	Use:   "index [path]",
 	Short: "Index documents for RAG",
 	Long: `Index documents by chunking them, generating embeddings, and storing them in the vector database.
-This enables the AI to use these documents as context for responses.`,
+This enables the AI to use these documents as context for responses and improves the quality
+of AI-generated answers by providing relevant background information.
+
+The indexing process:
+1. Scans files in the specified directory (or current directory if none specified)
+2. Chunks large documents into manageable pieces (default: 1000 chars with 200 char overlap)
+3. Generates embeddings for each chunk using the configured embedding model
+4. Stores chunks and embeddings in ChromaDB for fast semantic search
+
+Supported file formats: txt, md, go, py, js, ts, json, yaml, yml (configurable)
+
+EXAMPLES:
+  # Index current directory (non-recursive)
+  rag-cli index
+
+  # Index specific directory recursively
+  rag-cli index -r /path/to/docs
+
+  # Index with specific file formats
+  rag-cli index -f txt,md,go /path/to/project
+
+  # Index documentation recursively with multiple formats
+  rag-cli index -r -f md,txt,rst ~/projects/my-docs`,
 	Args: cobra.MaximumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		path := "."
@@ -36,8 +58,8 @@ This enables the AI to use these documents as context for responses.`,
 func init() {
 	rootCmd.AddCommand(indexCmd)
 	
-	indexCmd.Flags().BoolVarP(&indexRecursive, "recursive", "r", false, "Index directories recursively")
-	indexCmd.Flags().StringSliceVarP(&indexFormats, "formats", "f", []string{"txt", "md", "go", "py", "js", "ts", "json", "yaml", "yml"}, "File formats to index")
+	indexCmd.Flags().BoolVarP(&indexRecursive, "recursive", "r", false, "Index directories recursively, including all subdirectories")
+	indexCmd.Flags().StringSliceVarP(&indexFormats, "formats", "f", []string{"txt", "md", "go", "py", "js", "ts", "json", "yaml", "yml"}, "Comma-separated list of file extensions to index (without dots)")
 }
 
 func runIndex(path string) error {

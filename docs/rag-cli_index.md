@@ -5,7 +5,29 @@ Index documents for RAG
 ### Synopsis
 
 Index documents by chunking them, generating embeddings, and storing them in the vector database.
-This enables the AI to use these documents as context for responses.
+This enables the AI to use these documents as context for responses and improves the quality
+of AI-generated answers by providing relevant background information.
+
+The indexing process:
+1. Scans files in the specified directory (or current directory if none specified)
+2. Chunks large documents into manageable pieces (default: 1000 chars with 200 char overlap)
+3. Generates embeddings for each chunk using the configured embedding model
+4. Stores chunks and embeddings in ChromaDB for fast semantic search
+
+Supported file formats: txt, md, go, py, js, ts, json, yaml, yml (configurable)
+
+EXAMPLES:
+  # Index current directory (non-recursive)
+  rag-cli index
+
+  # Index specific directory recursively
+  rag-cli index -r /path/to/docs
+
+  # Index with specific file formats
+  rag-cli index -f txt,md,go /path/to/project
+
+  # Index documentation recursively with multiple formats
+  rag-cli index -r -f md,txt,rst ~/projects/my-docs
 
 ```
 rag-cli index [path] [flags]
@@ -14,16 +36,16 @@ rag-cli index [path] [flags]
 ### Options
 
 ```
-  -f, --formats strings   File formats to index (default [txt,md,go,py,js,ts,json,yaml,yml])
+  -f, --formats strings   Comma-separated list of file extensions to index (without dots) (default [txt,md,go,py,js,ts,json,yaml,yml])
   -h, --help              help for index
-  -r, --recursive         Index directories recursively
+  -r, --recursive         Index directories recursively, including all subdirectories
 ```
 
 ### Options inherited from parent commands
 
 ```
       --config string   config file (default is $HOME/.rag-cli.yaml)
-      --debug           Enable debug mode
+      --debug           Enable debug mode with detailed logging
 ```
 
 ### SEE ALSO

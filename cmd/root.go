@@ -26,7 +26,33 @@ var rootCmd = &cobra.Command{
 using Retrieval-Augmented Generation (RAG) with local language models.
 It can process documents, generate embeddings, and interact with vector databases.
 
-By default, starts an interactive chat session. Use subcommands for other operations.`,
+The AI assistant can execute shell commands, learn from past interactions, and
+provide contextual responses based on your indexed documents. It features
+intelligent command execution with iterative feedback and error correction.
+
+By default, starts an interactive chat session. Use subcommands for other operations.
+
+EXAMPLES:
+  # Start interactive chat (default behavior)
+  rag-cli
+
+  # Single prompt with command execution
+  rag-cli --prompt "create a backup of my config files"
+
+  # Auto-approve commands (use with caution)
+  rag-cli --auto-approve --prompt "show me the largest files"
+
+  # Non-interactive mode without command execution
+  rag-cli --prompt "explain how to set up a Go project" --no-history
+
+PREREQUISITES:
+  - Ollama running locally (brew install ollama)
+  - ChromaDB running in Docker or locally
+  - Models: llama3.1:8b (8B+ recommended), all-minilm
+
+CONFIGURATION:
+  Create ~/.rag-cli.yaml to customize LLM models, hosts, and other settings.
+  See config-example.yaml for reference.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if versionFlag, _ := cmd.Flags().GetBool("version"); versionFlag {
 			fmt.Println(version.GetBuildInfo().String())
@@ -75,14 +101,14 @@ func init() {
 
 	// Global flags
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.rag-cli.yaml)")
-	rootCmd.PersistentFlags().Bool("debug", false, "Enable debug mode")
-	rootCmd.Flags().BoolP("version", "v", false, "Print version information")
+	rootCmd.PersistentFlags().Bool("debug", false, "Enable debug mode with detailed logging")
+	rootCmd.Flags().BoolP("version", "v", false, "Print version information and build details")
 	
 	// Chat flags (now at root level)
-	rootCmd.Flags().StringP("prompt", "p", "", "Single prompt for non-interactive mode")
-	rootCmd.Flags().Bool("auto-approve", false, "Automatically approve command execution (use with caution)")
-	rootCmd.Flags().Bool("auto-index", false, "Automatically index file changes after command execution")
-	rootCmd.Flags().Bool("no-history", false, "Disable historical context lookup (useful for testing)")
+	rootCmd.Flags().StringP("prompt", "p", "", "Single prompt for non-interactive mode. Execute one task and exit.")
+	rootCmd.Flags().Bool("auto-approve", false, "Automatically approve command execution without user confirmation. USE WITH CAUTION - commands execute immediately.")
+	rootCmd.Flags().Bool("auto-index", false, "Automatically index file changes after command execution for learning")
+	rootCmd.Flags().Bool("no-history", false, "Disable historical context lookup. Useful for testing or when you want fresh responses without past context.")
 	
 	// Bind flags to viper
 	if err := viper.BindPFlag("debug", rootCmd.PersistentFlags().Lookup("debug")); err != nil {
