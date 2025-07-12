@@ -1,3 +1,0 @@
-```bash
-echo "written by rag-cli" > hello.txt
-```

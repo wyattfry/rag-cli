@@ -13,11 +13,13 @@ LDFLAGS := -ldflags "-X 'rag-cli/pkg/version.Version=$(VERSION)' \
 
 # Build the CLI tool
 build:
-	go build $(LDFLAGS) -o $(APP_NAME)
+	mkdir -p bin
+	go build $(LDFLAGS) -o bin/$(APP_NAME)
 
 # Build with race detector and debug info
 build-dev:
-	go build -race $(LDFLAGS) -o $(APP_NAME)
+	mkdir -p bin
+	go build -race $(LDFLAGS) -o bin/$(APP_NAME)
 
 # Run the CLI tool
 run:
@@ -25,9 +27,10 @@ run:
 
 # Clean build artifacts
 clean:
+	rm -rf bin/
 	rm -f rag-cli
 
-# Run tests
+# Run Go unit tests
 test:
 	go test -v ./...
 
@@ -35,6 +38,17 @@ test:
 test-coverage:
 	go test -v -coverprofile=coverage.out ./...
 	go tool cover -html=coverage.out -o coverage.html
+
+# Run integration tests
+test-integration:
+	./tests/run_all.sh
+
+# Run all tests (unit + integration)
+test-all:
+	@echo "Running Go unit tests..."
+	@make test
+	@echo "\nRunning integration tests..."
+	@make test-integration
 
 # Start Docker services (ChromaDB only for native Ollama setup)
 docker-up:
@@ -85,19 +99,21 @@ setup:
 # Help command
 help:
 	@echo "Available commands:"
-	@echo "  build       - Build the CLI tool"
-	@echo "  build-dev   - Build with race detector and debug info"
-	@echo "  run         - Run the CLI tool"
-	@echo "  clean       - Clean build artifacts"
-	@echo "  test        - Run tests"
-	@echo "  test-coverage - Run tests with coverage"
-	@echo "  docker-up   - Start Docker services (Ollama + ChromaDB)"
-	@echo "  docker-down - Stop Docker services"
-	@echo "  models      - Pull required models into Docker containers"
-	@echo "  deps        - Install dependencies"
-	@echo "  install     - Install CLI tool globally"
-	@echo "  fmt         - Format code"
-	@echo "  lint        - Lint code"
-	@echo "  docs        - Generate documentation"
-	@echo "  setup       - Full setup (Docker + models + build)"
-	@echo "  help        - Show this help message"
+	@echo "  build            - Build the CLI tool to bin/"
+	@echo "  build-dev        - Build with race detector and debug info to bin/"
+	@echo "  run              - Run the CLI tool"
+	@echo "  clean            - Clean build artifacts"
+	@echo "  test             - Run Go unit tests"
+	@echo "  test-coverage    - Run tests with coverage"
+	@echo "  test-integration - Run integration tests"
+	@echo "  test-all         - Run all tests (unit + integration)"
+	@echo "  docker-up        - Start Docker services (Ollama + ChromaDB)"
+	@echo "  docker-down      - Stop Docker services"
+	@echo "  models           - Pull required models into Docker containers"
+	@echo "  deps             - Install dependencies"
+	@echo "  install          - Install CLI tool globally"
+	@echo "  fmt              - Format code"
+	@echo "  lint             - Lint code"
+	@echo "  docs             - Generate documentation"
+	@echo "  setup            - Full setup (Docker + models + build)"
+	@echo "  help             - Show this help message"

@@ -40,6 +40,7 @@ test.txt
 
 # Log files
 *.log
+evaluation_debug.log
 
 # Config files (might contain sensitive info)
 .rag-cli.yaml

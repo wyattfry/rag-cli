@@ -23,7 +23,9 @@ It can process documents, generate embeddings, and interact with vector database
 			fmt.Println(version.GetBuildInfo().String())
 			return
 		}
-		cmd.Help()
+		if err := cmd.Help(); err != nil {
+			fmt.Fprintf(os.Stderr, "Error displaying help: %v\n", err)
+		}
 	},
 }
 
@@ -41,7 +43,9 @@ func init() {
 	rootCmd.Flags().BoolP("version", "v", false, "Print version information")
 	
 	// Bind flags to viper
-	viper.BindPFlag("debug", rootCmd.PersistentFlags().Lookup("debug"))
+	if err := viper.BindPFlag("debug", rootCmd.PersistentFlags().Lookup("debug")); err != nil {
+		fmt.Fprintf(os.Stderr, "Error binding debug flag: %v\n", err)
+	}
 }
 
 // initConfig reads in config file and ENV variables if set.

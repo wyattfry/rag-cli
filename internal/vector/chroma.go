@@ -13,10 +13,10 @@ import (
 )
 
 type ChromaClient struct {
-	baseURL      string
-	client       *http.Client
-	collection   string
-	collectionID string
+	baseURL     string
+	client      *http.Client
+	collections map[string]string // collection name -> collection ID mapping
+	config      config.VectorConfig // store config for collection names
 }
 
 type Collection struct {
@@ -49,7 +49,10 @@ type QueryResponse struct {
 // generateUUID generates a simple UUID for ChromaDB
 func generateUUID() string {
 	b := make([]byte, 16)
-	rand.Read(b)
+	if _, err := rand.Read(b); err != nil {
+		// Fallback to a simple time-based ID if random fails
+		return fmt.Sprintf("%d", time.Now().UnixNano())
+	}
 	// Set version (4) and variant bits
 	b[6] = (b[6] & 0x0f) | 0x40
 	b[8] = (b[8] & 0x3f) | 0x80
@@ -58,29 +61,39 @@ func generateUUID() string {
 
 func NewChromaClient(cfg config.VectorConfig) (*ChromaClient, error) {
 	client := &ChromaClient{
-		baseURL:    fmt.Sprintf("http://%s:%d", cfg.Host, cfg.Port),
-		collection: cfg.Collection,
+		baseURL:     fmt.Sprintf("http://%s:%d", cfg.Host, cfg.Port),
+		collections: make(map[string]string),
+		config:      cfg,
 		client: &http.Client{
 			Timeout: 30 * time.Second,
 		},
 	}
 
-	// Try to create collection if it doesn't exist
-	if err := client.createCollection(); err != nil {
-		return nil, fmt.Errorf("failed to create collection: %w", err)
+	// Initialize all collections
+	collectionNames := []string{
+		cfg.Collection,
+		cfg.CommandCollection,
+		cfg.AutoIndexCollection,
+	}
+
+	for _, name := range collectionNames {
+		if err := client.createCollection(name); err != nil {
+			return nil, fmt.Errorf("failed to create collection %s: %w", name, err)
+		}
 	}
 
 	return client, nil
 }
 
-func (c *ChromaClient) createCollection() error {
+func (c *ChromaClient) createCollection(name string) error {
 	// First try to find existing collection
-	if err := c.findCollection(); err == nil {
+	if id, err := c.findCollection(name); err == nil {
+		c.collections[name] = id
 		return nil // Collection found
 	}
 
 	// Create new collection
-	collection := Collection{Name: c.collection}
+	collection := Collection{Name: name}
 	reqBody, err := json.Marshal(collection)
 	if err != nil {
 		return fmt.Errorf("failed to marshal collection: %w", err)
@@ -108,46 +121,51 @@ func (c *ChromaClient) createCollection() error {
 		return fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
-	c.collectionID = collectionResp.ID
+	c.collections[name] = collectionResp.ID
 	return nil
 }
 
-func (c *ChromaClient) findCollection() error {
+func (c *ChromaClient) findCollection(name string) (string, error) {
 	resp, err := http.Get(c.baseURL + "/api/v1/collections")
 	if err != nil {
-		return fmt.Errorf("failed to get collections: %w", err)
+		return "", fmt.Errorf("failed to get collections: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+		return "", fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return fmt.Errorf("failed to read response: %w", err)
+		return "", fmt.Errorf("failed to read response: %w", err)
 	}
 
 	var collections []CollectionResponse
 	if err := json.Unmarshal(body, &collections); err != nil {
-		return fmt.Errorf("failed to unmarshal response: %w", err)
+		return "", fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
 	// Find collection by name
 	for _, col := range collections {
-		if col.Name == c.collection {
-			c.collectionID = col.ID
-			return nil
+		if col.Name == name {
+			return col.ID, nil
 		}
 	}
 
-	return fmt.Errorf("collection not found")
+	return "", fmt.Errorf("collection %s not found", name)
 }
 
-func (c *ChromaClient) AddDocument(id, content string, embedding []float32) error {
+func (c *ChromaClient) AddDocument(collectionName, id, content string, embedding []float32) error {
 	if id == "" {
 		id = generateUUID()
 	}
+	
+	collectionID, exists := c.collections[collectionName]
+	if !exists {
+		return fmt.Errorf("collection %s not found", collectionName)
+	}
+	
 	doc := Document{
 		IDs:        []string{id},
 		Documents:  []string{content},
@@ -159,7 +177,7 @@ func (c *ChromaClient) AddDocument(id, content string, embedding []float32) erro
 		return fmt.Errorf("failed to marshal document: %w", err)
 	}
 
-	url := fmt.Sprintf("%s/api/v1/collections/%s/add", c.baseURL, c.collectionID)
+	url := fmt.Sprintf("%s/api/v1/collections/%s/add", c.baseURL, collectionID)
 	resp, err := http.Post(url, "application/json", bytes.NewBuffer(reqBody))
 	if err != nil {
 		return fmt.Errorf("failed to add document: %w", err)
@@ -180,7 +198,12 @@ func (c *ChromaClient) Search(query string, numResults int) ([]string, error) {
 	return []string{}, nil
 }
 
-func (c *ChromaClient) SearchWithEmbedding(queryEmbedding []float32, numResults int) ([]string, error) {
+func (c *ChromaClient) SearchWithEmbedding(collectionName string, queryEmbedding []float32, numResults int) ([]string, error) {
+	collectionID, exists := c.collections[collectionName]
+	if !exists {
+		return nil, fmt.Errorf("collection %s not found", collectionName)
+	}
+	
 	queryReq := QueryRequest{
 		QueryEmbeddings: [][]float32{queryEmbedding},
 		NResults:        numResults,
@@ -191,7 +214,7 @@ func (c *ChromaClient) SearchWithEmbedding(queryEmbedding []float32, numResults 
 		return nil, fmt.Errorf("failed to marshal query: %w", err)
 	}
 
-	url := fmt.Sprintf("%s/api/v1/collections/%s/query", c.baseURL, c.collectionID)
+	url := fmt.Sprintf("%s/api/v1/collections/%s/query", c.baseURL, collectionID)
 	resp, err := http.Post(url, "application/json", bytes.NewBuffer(reqBody))
 	if err != nil {
 		return nil, fmt.Errorf("failed to query: %w", err)
@@ -218,4 +241,17 @@ func (c *ChromaClient) SearchWithEmbedding(queryEmbedding []float32, numResults 
 	}
 
 	return results, nil
+}
+
+// Helper methods to get collection names
+func (c *ChromaClient) DocumentsCollection() string {
+	return c.config.Collection
+}
+
+func (c *ChromaClient) CommandsCollection() string {
+	return c.config.CommandCollection
+}
+
+func (c *ChromaClient) AutoIndexCollection() string {
+	return c.config.AutoIndexCollection
 }

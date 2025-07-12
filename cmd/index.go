@@ -14,7 +14,6 @@ import (
 )
 
 var (
-	indexPath      string
 	indexRecursive bool
 	indexFormats   []string
 )
@@ -133,7 +132,7 @@ func processFile(filePath string, chunkerClient *chunker.Client, embeddingClient
 		}
 
 		// Store in vector database with empty ID to auto-generate UUID
-		if err := vectorStore.AddDocument("", chunk, embedding); err != nil {
+		if err := vectorStore.AddDocument(vectorStore.DocumentsCollection(), "", chunk, embedding); err != nil {
 			return fmt.Errorf("failed to store document in vector database: %w", err)
 		}
 	}
